@@ -9,6 +9,7 @@
 
 #define RATE 48000
 #define BUFZ 10000
+#define CR 10
 
 int main(int c, char **v) {
   pa_simple *s;
@@ -47,10 +48,12 @@ int main(int c, char **v) {
       int16_t s = buf[y];
       if ((s < 0 && !was_negative) || (s >= 0 && was_negative)) {
         crossings++;
-        average_crossing = (average_crossing + since_last_crossing + since_last_crossing) /
-                           3.0; // crude moving average
-        hz_guess = 0.5 / (average_crossing / RATE);
-        since_last_crossing = 0;
+        if (crossings >= CR) {
+          average_crossing = since_last_crossing;
+          hz_guess = 0.5 / (average_crossing / (RATE * crossings));
+          since_last_crossing = 0;
+          crossings = 0;
+        }
         was_negative = !was_negative;
       } else {
         since_last_crossing++;
