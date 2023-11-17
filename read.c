@@ -37,6 +37,7 @@ int main(int c, char **v) {
   double average_crossing = 0;
   double hz_guess = 0;
   bool was_negative = false;
+  float previous_reading;
 
   for (;;) {
     if (pa_simple_read(s, buf, BUFZ, &error) < 0) {
@@ -46,20 +47,23 @@ int main(int c, char **v) {
     }
 
     for (int y = 0; y < BUFZ; y++) {
-      int16_t s = buf[y];
-      if ((s < 0 && !was_negative) || (s >= 0 && was_negative)) {
-        since_last_crossing++;
-        crossings++;
+      float s = buf[y];
+      since_last_crossing++;
+      if ((s < 0 && !was_negative)) {
+        if(crossings++ == 0) {
+
+        }
         if (crossings >= CR) {
           average_crossing = since_last_crossing / crossings;
-          hz_guess = 0.5 / (average_crossing / RATE);
+          hz_guess = 1 / (average_crossing / RATE);
           since_last_crossing = 0;
           crossings = 0;
         }
         was_negative = !was_negative;
-      } else {
-        since_last_crossing++;
+      } else if (s >= 0 && was_negative) {
+        was_negative = !was_negative;
       }
+      previous_reading = s;
     }
     printf("\rMA of interval: %f, guess is %.02fHz            ", average_crossing,
            hz_guess);
