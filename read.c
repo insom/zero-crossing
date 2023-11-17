@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 #include <pulse/error.h>
 #include <pulse/simple.h>
@@ -51,9 +52,10 @@ int main(int c, char **v) {
       since_last_crossing++;
       if ((s < 0 && !was_negative)) {
         if(crossings++ == 0) {
-
+          since_last_crossing -= (1 - (fabs(s) / (fabs(s) + previous_reading)));
         }
         if (crossings >= CR) {
+          since_last_crossing += (1 - (fabs(s) / (fabs(s) + previous_reading)));
           average_crossing = since_last_crossing / crossings;
           hz_guess = 1 / (average_crossing / RATE);
           since_last_crossing = 0;
