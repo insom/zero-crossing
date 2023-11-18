@@ -10,7 +10,7 @@
 
 #define RATE 48000
 #define BUFZ 7200
-#define CR 10
+#define CR 5
 
 int main(int c, char **v) {
   pa_simple *s;
@@ -47,8 +47,11 @@ int main(int c, char **v) {
       return -1;
     }
 
+    bool have_reading = false;
     for (int y = 0; y < BUFZ; y++) {
       float s = buf[y];
+      if(fabs(s) < 0.10 && !have_reading) continue;
+      have_reading = true;
       since_last_crossing++;
       if ((s < 0 && !was_negative)) {
         if(crossings++ == 0) {
@@ -67,8 +70,10 @@ int main(int c, char **v) {
       }
       previous_reading = s;
     }
-    printf("\rMA of interval: %f, guess is %.02fHz            ", average_crossing,
-           hz_guess);
+    if(have_reading) {
+    printf("MA of interval: %f, guess is %.02fHz, symbol = %d            \n", average_crossing,
+           hz_guess, (int)((hz_guess - 1000) / .625));
     fflush(stdout);
+    }
   }
 }
